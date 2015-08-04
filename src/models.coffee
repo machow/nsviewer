@@ -392,24 +392,19 @@ Transform =
 
   # Transformation matrix for viewer space --> atlas (MNI 2mm) space
   viewerToAtlas: (coords) ->
-    #matrix = @_transformationMatrix([180, -218, -180], [-90, 90, 108])
-    matrix = [[180, 0, 0, -90], [0, -218, 0, 90], [0, 0, -180, 108]]
-    console.log matrix2
+    matrix = @_transformationMatrix([180, -218, -180], [-90, 90, 108])
     return @transformCoordinates(coords, matrix)
 
   atlasToViewer: (coords) ->
-    #matrix = @_transformationMatrix([1.0/180, -1.0/218, 90.0/218], [0.5, 90.0/218, 108.0/180])
-    matrix = [[1.0/180, 0, 0, 0.5], [0, -1.0/218, 0, 90.0/218], [0, 0, -1.0/180, 108.0/180]]
+    matrix = @_transformationMatrix([1.0/180, -1.0/218, 90.0/218], [0.5, 90.0/218, 108.0/180])
     return @transformCoordinates(coords, matrix, false)
 
   # Transformation matrix for atlas (MNI 2mm) space --> image (0-indexed) space
   atlasToImage: (coords) ->
-    #matrix = @_transformationMatrix([-.5, .5, .5], [45, 63, 36])
-    matrix = [[-0.5, 0, 0, 45], [0, 0.5, 0, 63], [0, 0, 0.5, 36]]
+    matrix = @_transformationMatrix([-.5, .5, .5], [45, 63, 36])
     return @transformCoordinates(coords, matrix)
 
   # Transformation matrix for image space --> atlas (MNI 2mm) space
   imageToAtlas: (coords) ->
-    #matrix = @_transformationMatrix([-2, 2, 2], [90, -126, -72])
-    matrix = [[-2, 0, 0, 90], [0, 2, 0, -126], [0, 0, 2, -72]]
+    matrix = @_transformationMatrix([-2, 2, 2], [90, -126, -72])
     return @transformCoordinates(coords, matrix)
