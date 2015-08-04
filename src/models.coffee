@@ -363,6 +363,18 @@ Transform =
       vol[x][y][z] = vec[i]
     return(vol)
 
+  # Create transformation matrix from translation and scaling parameters
+  _transformationMatrix: (translateXYZ, scaleXYZ) ->
+    M = []
+    # create row-by-row
+    for ii in [0..2]
+        row = (0 for jj in [0..3]) # zero array of length 4
+        row[ii] = translateXYZ[ii]
+        row[3] = scaleXYZ[ii]
+        M.push(row)
+    console.log M
+    return M
+  
   # Generic coordinate transformation function that takes an input
   # set of coordinates and a matrix to use in the transformation.
   # Depends on the Sylvester library.
@@ -377,21 +389,27 @@ Transform =
       res.push(e)
     return res
 
+
   # Transformation matrix for viewer space --> atlas (MNI 2mm) space
   viewerToAtlas: (coords) ->
+    #matrix = @_transformationMatrix([180, -218, -180], [-90, 90, 108])
     matrix = [[180, 0, 0, -90], [0, -218, 0, 90], [0, 0, -180, 108]]
+    console.log matrix2
     return @transformCoordinates(coords, matrix)
 
   atlasToViewer: (coords) ->
+    #matrix = @_transformationMatrix([1.0/180, -1.0/218, 90.0/218], [0.5, 90.0/218, 108.0/180])
     matrix = [[1.0/180, 0, 0, 0.5], [0, -1.0/218, 0, 90.0/218], [0, 0, -1.0/180, 108.0/180]]
     return @transformCoordinates(coords, matrix, false)
 
   # Transformation matrix for atlas (MNI 2mm) space --> image (0-indexed) space
   atlasToImage: (coords) ->
+    #matrix = @_transformationMatrix([-.5, .5, .5], [45, 63, 36])
     matrix = [[-0.5, 0, 0, 45], [0, 0.5, 0, 63], [0, 0, 0.5, 36]]
     return @transformCoordinates(coords, matrix)
 
   # Transformation matrix for image space --> atlas (MNI 2mm) space
   imageToAtlas: (coords) ->
+    #matrix = @_transformationMatrix([-2, 2, 2], [90, -126, -72])
     matrix = [[-2, 0, 0, 90], [0, 2, 0, -126], [0, 0, 2, -72]]
     return @transformCoordinates(coords, matrix)
