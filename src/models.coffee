@@ -1,3 +1,5 @@
+ndarray = require('ndarray')
+ops = require('ndarray-ops')
 
 class Image
 
@@ -416,3 +418,12 @@ Transform =
   imageToAtlas: (coords, img) ->
     matrix = ndarray([-2, 0, 0, 90, 0, 2, 0, -126, 0, 0, 2, -72], [3,4])
     return @transformCoordinates(coords, matrix)
+
+
+module.exports = 
+    Image: Image
+    Layer: Layer
+    LayerList: LayerList
+    Transform: Transform
+    ColorMap: ColorMap
+    Threshold: Threshold

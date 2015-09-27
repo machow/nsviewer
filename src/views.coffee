@@ -1,4 +1,4 @@
-
+{ColorMap} = require('./models.coffee')
 
 class UserInterface
 
@@ -570,3 +570,9 @@ hexToRgb = (hex) ->
     g: parseInt(result[2], 16)
     b: parseInt(result[3], 16)
   else null
+
+module.exports = 
+    UserInterface: UserInterface
+    DataPanel: DataPanel
+    ViewSettings: ViewSettings
+    View: View

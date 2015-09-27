@@ -1,7 +1,7 @@
 ndarray = require('ndarray')
 ops = require('ndarray-ops')
-window.Viewer or= {}
-
+{Image, Layer, LayerList, Transform} = require('./models.coffee')
+{UserInterface, DataPanel, ViewSettings, View} = require('./views.coffee')
 ### VARIOUS HELPFUL FUNCTIONS ###
 
 # Check if a variable is an array
@@ -337,3 +337,5 @@ window.Viewer = class Viewer
 
   setAtlasToViewer: (cc) ->
       @coords_abc = Transform.atlasToViewer(cc)
+
+window.Viewer = Viewer
