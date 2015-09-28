@@ -183,6 +183,9 @@ class DataPanel
         cc = $("#axis_pos_#{i}").val()  # Get current position
         # TODO: ADD VALIDATION--NEED TO ROUND TO NEAREST VALID POSITION
         #     AND MAKE SURE WE'RE WITHIN BOUNDS
+        # MC TODO: setAtlasToViewer calls a transform method, so we need to considerable
+        # header info. However, it looks like addCoordinateFields isn't used in the app,
+        # so maybe it isn't an issue?
         @viewer.setAtlasToViewer(cc)
         @viewer.coords_ijk[i] = cc
       @viewer.update()  # Fix
@@ -333,7 +336,9 @@ class View
     # Show current plane
     @context.textAlign = 'left'
     @context.textBaseline = 'middle'
-    planePos = @viewer.coords_xyz()[@dim]
+    # MC TODO: this is the only place coords_xyz was being called as a method, 
+    # so I changed it to an attr.
+    planePos = @viewer.coords_xyz[@dim]
     planePos = '+' + planePos if planePos > 0
     planeText = ['x','y','z'][@dim] + ' = ' + planePos
     @context.fillText(planeText, 0.03*@width, 0.95*@height)

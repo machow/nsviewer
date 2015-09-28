@@ -11,7 +11,8 @@ class Image
     # convert 1d transforms to 3x4 ndarrays
     if data.transforms
         @transforms = {}
-        @transforms[k] = ndarray(v, [3,4]) for own k,v of data.transforms
+        # transform matrices are stored in fortran ordering
+        @transforms[k] = ndarray(v, [4,4], [1,4]) for own k,v of data.transforms
 
     # Images loaded from a binary volume already have 3D data, and we 
     # just need to clean up values and swap axes (to reverse x and z 
@@ -33,9 +34,14 @@ class Image
     @max = ops.sup(@data)
 
     # If peaks are passed, construct spheres around them
-    if 'peaks' of data
-      @addSphere(Transform.atlasToImage([p.x, p.y, p.z]), p.r ?= 3, p.value ?= 1) for p in data.peaks
-      @max = 2   # Very strange bug causes problem if @max is < value in addSphere();
+    # MC TODO: reimplement addSphere. The issue is that the transform doesn't
+    # make sense without a transformation matrix. It could use a reference image.
+    # The calling of addSphere may make more sense in app.coffee's Viewer.
+    # Alternatively, the Image constructor could take a header argument.
+    #
+    #if 'peaks' of data
+    #  @addSphere(Transform.atlasToImage([p.x, p.y, p.z], @), p.r ?= 3, p.value ?= 1) for p in data.peaks
+    #  @max = 2   # Very strange bug causes problem if @max is < value in addSphere();
              # setting to twice the value seems to work.
 
 
@@ -397,26 +403,29 @@ Transform =
           res[ii] += matrix.get(ii,jj) * coords[jj]
       res[ii] = Math.round(res[ii]) if round
 
+    console.log(Error())
     return res
 
   # Transformation matrix for viewer space --> atlas (MNI 2mm) space
+  # MC TODO: rewrite next two transforms as functions of dims in image header
   viewerToAtlas: (coords) ->
     matrix = ndarray([180, 0, 0, -90, 0, -218, 0, 90, 0, 0, -180, 108], [3,4])
     return @transformCoordinates(coords, matrix)
 
-  atlasToViewer: (coords) ->
+  atlasToViewer: (coords, img) ->
     matrix = ndarray([1.0/180, 0, 0, 0.5, 0, -1.0/218, 0, 90.0/218, 0, 0, -1.0/180, 108.0/180], [3,4])
     return @transformCoordinates(coords, matrix, false)
 
-  # MC TODO: these are the ones contained in image data
-  # Transformation matrix for atlas (MNI 2mm) space --> image (0-indexed) space
   atlasToImage: (coords, img) ->
-    matrix = ndarray([-0.5, 0, 0, 45, 0, 0.5, 0, 63, 0, 0, 0.5, 36], [3,4])
+    #matrix = ndarray([-0.5, 0, 0, 45, 0, 0.5, 0, 63, 0, 0, 0.5, 36], [3,4])
+    if img then matrix = img.transforms['rasToIjk']
+    console.log(img)
     return @transformCoordinates(coords, matrix)
 
   # Transformation matrix for image space --> atlas (MNI 2mm) space
   imageToAtlas: (coords, img) ->
-    matrix = ndarray([-2, 0, 0, 90, 0, 2, 0, -126, 0, 0, 2, -72], [3,4])
+    #matrix = ndarray([-2, 0, 0, 90, 0, 2, 0, -126, 0, 0, 2, -72], [3,4])
+    if img then matrix = img.transforms['ijkToRas']
     return @transformCoordinates(coords, matrix)
 
 

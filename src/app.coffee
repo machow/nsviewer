@@ -28,11 +28,9 @@ window.Viewer = class Viewer
 
   constructor : (layerListId, layerSettingClass, @cache = true, options = {}) ->
 
-    xyz = if 'xyz' of options then options.xyz else [0.0, 0.0, 0.0]
+    #xyz = if 'xyz' of options then options.xyz else [0.0, 0.0, 0.0]
 
     # Coordinate frame names: xyz = world; ijk = image; abc = canvas
-    @coords_ijk = Transform.atlasToImage(xyz)  # initialize at origin
-    @coords_abc = Transform.atlasToViewer(xyz)
     @viewSettings = new ViewSettings(options)
     @views = []
     @sliders = {}
@@ -43,10 +41,6 @@ window.Viewer = class Viewer
     # keys = @cache()
     # for k of keys
     #   @cache(k, null)
-
-  # Current world coordinates
-  coords_xyz: ->
-    return Transform.imageToAtlas(@coords_ijk)
 
   paint: ->
     $(@).trigger("beforePaint")
@@ -206,6 +200,8 @@ window.Viewer = class Viewer
 
     # Reorder layers once asynchronous calls are finished
     $.when.apply($, ajaxReqs).then( =>
+      console.log('IMAGES LOADED ------------')
+      @onSetReference() if @layerList.referenceLayer?
       order = (i.name for i in images)
       @sortLayers(order.reverse())
       @selectLayer(activate ?= 0)
@@ -271,8 +267,8 @@ window.Viewer = class Viewer
 
   updateDataDisplay: ->
     # Get active layer and extract current value, coordinates, etc.
-    currentCoords = Transform.imageToAtlas(@coords_ijk.slice(0)).join(', ')
-
+    console.log('data display')
+    currentCoords = @coords_xyz 
     data =
       voxelValue: @getValue()
       currentCoords: currentCoords
@@ -291,15 +287,14 @@ window.Viewer = class Viewer
     # event in the view. Otherwise we update only 1 dimension.
     $(@).trigger('beforeLocationChange')
     cxyz = @viewer2dTo3d(dim, cx, cy)
-    @coords_abc = cxyz
-    @coords_ijk = Transform.atlasToImage(Transform.viewerToAtlas(@coords_abc))
+    @setCoords('viewer', cxyz)
     @paint()
     $(@).trigger('afterLocationChange', {ijk: @coords_ijk})
 
 
   moveToAtlasCoords: (coords, paint = true) ->
-    @coords_ijk = Transform.atlasToImage(coords)
-    @coords_abc = Transform.atlasToViewer(coords)
+    # MC TODO: Was the coord_atlas originally set before this function was called?
+    @setCoords('atlas', coords)
     @paint() if paint
 
 
@@ -315,6 +310,9 @@ window.Viewer = class Viewer
     selected voxel for the currently active layer. Optionally, can pass a
     specific layer and/or coordinates (in viewer space) to use. If all is true,
     returns values for all layers as an array. ###
+
+    # MC TODO: implement getting coords
+    console.log('value gotten')
     if coords?
       coords = Transform.viewerToAtlas(coords) if space == 'viewer'
       coords = Transform.atlasToImage(coords) if space == 'viewer' or space == 'atlas'
@@ -327,6 +325,7 @@ window.Viewer = class Viewer
 
   # Takes dimension and x/y as input and returns x/y/z viewer coordinates
   viewer2dTo3d: (dim, cx, cy = null) ->
+    console.log('viewer 2d to 3d')
     if cy?
       cxyz = [cx, cy]
       cxyz.splice(dim, 0, @coords_abc[dim])
@@ -337,5 +336,34 @@ window.Viewer = class Viewer
 
   setAtlasToViewer: (cc) ->
       @coords_abc = Transform.atlasToViewer(cc)
+
+  onSetReference: () ->
+    coords = @viewSettings.settings.xyz or [0.0, 0.0, 0.0]
+    console.log('reference set')
+    console.log("coords are #{coords}")
+    @setCoords('atlas', coords)
+
+  setCoords: (space, coords, refImage) ->
+    # set coordinates for viewer across all 3 spaces
+    
+    refImage = @layerList.referenceLayer?.image
+    if not refImage then return null
+
+    switch space
+        when 'atlas'
+            res = @coords_xyz = coords
+            @coords_abc = Transform.atlasToViewer(coords, refImage)
+            @coords_ijk = Transform.atlasToImage(coords, refImage)
+        when 'viewer'
+            res = @coords_abc = coords
+            @coords_xyz = Transform.viewerToAtlas(coords, refImage)
+            @coords_ijk = Transform.atlasToImage(@coords_xyz, refImage)
+        when 'image'
+            res = @coords_ijk = coords
+            @coords_xyz = Transform.imageToAtlas(coords, refImage)
+            @coords_abc = Transform.atlasToViewer(@coords_xyz, refImage)
+
+    return res
+
 
 window.Viewer = Viewer
